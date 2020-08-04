@@ -99,9 +99,8 @@ int gpu_strcasecmp(const char* s1, const char* s2);
 #define GPU_BLIT_BUFFER_INIT_MAX_NUM_VERTICES (GPU_BLIT_BUFFER_VERTICES_PER_SPRITE*1000)
 
 
-// Near the unsigned short limit (65535)
-#define GPU_BLIT_BUFFER_ABSOLUTE_MAX_VERTICES 60000
 // Near the unsigned int limit (4294967295)
+#define GPU_BLIT_BUFFER_ABSOLUTE_MAX_VERTICES 4000000000u
 #define GPU_INDEX_BUFFER_ABSOLUTE_MAX_VERTICES 4000000000u
 
 
@@ -770,7 +769,7 @@ static GPU_bool growBlitBuffer(GPU_CONTEXT_DATA* cdata, unsigned int minimum_ver
     memcpy(new_buffer, cdata->blit_buffer, cdata->blit_buffer_num_vertices * GPU_BLIT_BUFFER_STRIDE);
     SDL_free(cdata->blit_buffer);
     cdata->blit_buffer = new_buffer;
-    cdata->blit_buffer_max_num_vertices = (unsigned short)new_max_num_vertices;
+    cdata->blit_buffer_max_num_vertices = (unsigned int)new_max_num_vertices;
 
     #ifdef SDL_GPU_USE_BUFFER_PIPELINE
         // Resize the VBOs
@@ -794,7 +793,7 @@ static GPU_bool growBlitBuffer(GPU_CONTEXT_DATA* cdata, unsigned int minimum_ver
 static GPU_bool growIndexBuffer(GPU_CONTEXT_DATA* cdata, unsigned int minimum_vertices_needed)
 {
 	unsigned int new_max_num_vertices;
-	unsigned short* new_indices;
+	unsigned int* new_indices;
 
     if(minimum_vertices_needed <= cdata->index_buffer_max_num_vertices)
         return GPU_TRUE;
@@ -811,8 +810,8 @@ static GPU_bool growIndexBuffer(GPU_CONTEXT_DATA* cdata, unsigned int minimum_ve
 
     //GPU_LogError("Growing to %d indices\n", new_max_num_vertices);
     // Resize the index buffer
-    new_indices = (unsigned short*)SDL_malloc(new_max_num_vertices * sizeof(unsigned short));
-    memcpy(new_indices, cdata->index_buffer, cdata->index_buffer_num_vertices * sizeof(unsigned short));
+    new_indices = (unsigned int*)SDL_malloc(new_max_num_vertices * sizeof(unsigned int));
+    memcpy(new_indices, cdata->index_buffer, cdata->index_buffer_num_vertices * sizeof(unsigned int));
     SDL_free(cdata->index_buffer);
     cdata->index_buffer = new_indices;
     cdata->index_buffer_max_num_vertices = new_max_num_vertices;
@@ -824,7 +823,7 @@ static GPU_bool growIndexBuffer(GPU_CONTEXT_DATA* cdata, unsigned int minimum_ve
         #endif
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cdata->blit_IBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short) * cdata->index_buffer_max_num_vertices, NULL, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * cdata->index_buffer_max_num_vertices, NULL, GL_DYNAMIC_DRAW);
 
         #if !defined(SDL_GPU_NO_VAO)
         glBindVertexArray(0);
@@ -1546,8 +1545,8 @@ static GPU_Target* CreateTargetFromWindow(GPU_Renderer* renderer, Uint32 windowI
         cdata->blit_buffer = (float*)SDL_malloc(blit_buffer_storage_size);
         cdata->index_buffer_max_num_vertices = GPU_BLIT_BUFFER_INIT_MAX_NUM_VERTICES;
         cdata->index_buffer_num_vertices = 0;
-        index_buffer_storage_size = GPU_BLIT_BUFFER_INIT_MAX_NUM_VERTICES*sizeof(unsigned short);
-        cdata->index_buffer = (unsigned short*)SDL_malloc(index_buffer_storage_size);
+        index_buffer_storage_size = GPU_BLIT_BUFFER_INIT_MAX_NUM_VERTICES*sizeof(unsigned int);
+        cdata->index_buffer = (unsigned int*)SDL_malloc(index_buffer_storage_size);
     }
     else
     {
@@ -1885,7 +1884,7 @@ static GPU_Target* CreateTargetFromWindow(GPU_Renderer* renderer, Uint32 windowI
 
         glGenBuffers(1, &cdata->blit_IBO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cdata->blit_IBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short) * cdata->blit_buffer_max_num_vertices, NULL, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * cdata->blit_buffer_max_num_vertices, NULL, GL_DYNAMIC_DRAW);
 
         glGenBuffers(16, cdata->attribute_VBO);
 
@@ -4241,10 +4240,10 @@ static void FreeTarget(GPU_Renderer* renderer, GPU_Target* target)
     color_index += GPU_BLIT_BUFFER_FLOATS_PER_VERTEX;
 
 #define SET_INDEXED_VERTEX(offset) \
-    index_buffer[cdata->index_buffer_num_vertices++] = blit_buffer_starting_index + (unsigned short)(offset);
+    index_buffer[cdata->index_buffer_num_vertices++] = blit_buffer_starting_index + (unsigned int)(offset);
 
 #define SET_RELATIVE_INDEXED_VERTEX(offset) \
-    index_buffer[cdata->index_buffer_num_vertices++] = cdata->blit_buffer_num_vertices + (unsigned short)(offset);
+    index_buffer[cdata->index_buffer_num_vertices++] = cdata->blit_buffer_num_vertices + (unsigned int)(offset);
 
 
 
@@ -4285,8 +4284,8 @@ static void Blit(GPU_Renderer* renderer, GPU_Image* image, GPU_Rect* src_rect, G
 	float dx1, dy1, dx2, dy2;
 	GPU_CONTEXT_DATA* cdata;
 	float* blit_buffer;
-	unsigned short* index_buffer;
-	unsigned short blit_buffer_starting_index;
+	unsigned int* index_buffer;
+	unsigned int blit_buffer_starting_index;
 	int vert_index;
 	int tex_index;
 	int color_index;
@@ -4512,8 +4511,8 @@ static void BlitTransformX(GPU_Renderer* renderer, GPU_Image* image, GPU_Rect* s
 	float w, h;
 	GPU_CONTEXT_DATA* cdata;
 	float* blit_buffer;
-	unsigned short* index_buffer;
-	unsigned short blit_buffer_starting_index;
+	unsigned int* index_buffer;
+	unsigned int blit_buffer_starting_index;
 	int vert_index;
 	int tex_index;
 	int color_index;
@@ -4842,7 +4841,7 @@ static int get_lowest_attribute_num_values(GPU_CONTEXT_DATA* cdata, int cap)
     return lowest;
 }
 
-static_inline void submit_buffer_data(int bytes, float* values, int bytes_indices, unsigned short* indices)
+static_inline void submit_buffer_data(int bytes, float* values, int bytes_indices, unsigned int* indices)
 {
     #ifdef SDL_GPU_USE_BUFFER_PIPELINE
         #if defined(SDL_GPU_USE_BUFFER_RESET)
@@ -4852,7 +4851,7 @@ static_inline void submit_buffer_data(int bytes, float* values, int bytes_indice
         #elif defined(SDL_GPU_USE_BUFFER_MAPPING)
         // NOTE: On the Raspberry Pi, you may have to use GL_DYNAMIC_DRAW instead of GL_STREAM_DRAW for buffers to work with glMapBuffer().
         float* data = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-        unsigned short* data_i = (indices == NULL? NULL : (unsigned short*)glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY));
+        unsigned int* data_i = (indices == NULL? NULL : (unsigned int*)glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY));
         if(data != NULL)
         {
             memcpy(data, values, bytes);
@@ -4914,7 +4913,7 @@ static void gpu_upload_modelviewprojection(GPU_Target* dest, GPU_Context* contex
 
 
 // Assumes the right format
-static void PrimitiveBatchV(GPU_Renderer* renderer, GPU_Image* image, GPU_Target* target, GPU_PrimitiveEnum primitive_type, unsigned short num_vertices, void* values, unsigned int num_indices, unsigned short* indices, GPU_BatchFlagEnum flags)
+static void PrimitiveBatchV(GPU_Renderer* renderer, GPU_Image* image, GPU_Target* target, GPU_PrimitiveEnum primitive_type, unsigned int num_vertices, void* values, unsigned int num_indices, unsigned int* indices, GPU_BatchFlagEnum flags)
 {
     GPU_Context* context;
 	GPU_CONTEXT_DATA* cdata;
@@ -5102,7 +5101,7 @@ static void PrimitiveBatchV(GPU_Renderer* renderer, GPU_Image* image, GPU_Target
         if(indices == NULL)
             glDrawArrays(primitive_type, 0, num_indices);
         else
-            glDrawElements(primitive_type, num_indices, GL_UNSIGNED_SHORT, indices);
+            glDrawElements(primitive_type, num_indices, GL_UNSIGNED_INT, indices);
 
         // Disable
         if(use_colors)
@@ -5188,7 +5187,7 @@ static void PrimitiveBatchV(GPU_Renderer* renderer, GPU_Image* image, GPU_Target
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cdata->blit_IBO);
 
             // Copy the whole blit buffer to the GPU
-            submit_buffer_data(stride * num_vertices, values, sizeof(unsigned short)*num_indices, indices);  // Fills GPU buffer with data.
+            submit_buffer_data(stride * num_vertices, values, sizeof(unsigned int)*num_indices, indices);  // Fills GPU buffer with data.
 
             // Specify the formatting of the blit buffer
             if(use_vertices)
@@ -5226,7 +5225,7 @@ static void PrimitiveBatchV(GPU_Renderer* renderer, GPU_Image* image, GPU_Target
         if(indices == NULL)
             glDrawArrays(primitive_type, 0, num_indices);
         else
-            glDrawElements(primitive_type, num_indices, GL_UNSIGNED_SHORT, (void*)0);
+            glDrawElements(primitive_type, num_indices, GL_UNSIGNED_INT, (void*)0);
 
         // Disable the vertex arrays again
         if(use_vertices)
@@ -5547,7 +5546,7 @@ static void ClearRGBA(GPU_Renderer* renderer, GPU_Target* target, Uint8 r, Uint8
     }
 }
 
-static void DoPartialFlush(GPU_Renderer* renderer, GPU_Target* dest, GPU_Context* context, unsigned short num_vertices, float* blit_buffer, unsigned int num_indices, unsigned short* index_buffer)
+static void DoPartialFlush(GPU_Renderer* renderer, GPU_Target* dest, GPU_Context* context, unsigned int num_vertices, float* blit_buffer, unsigned int num_indices, unsigned int* index_buffer)
 {
     GPU_CONTEXT_DATA* cdata = (GPU_CONTEXT_DATA*)context->data;
 	(void)renderer;
@@ -5561,7 +5560,7 @@ static void DoPartialFlush(GPU_Renderer* renderer, GPU_Target* dest, GPU_Context
     glTexCoordPointer(2, GL_FLOAT, GPU_BLIT_BUFFER_STRIDE, blit_buffer + GPU_BLIT_BUFFER_TEX_COORD_OFFSET);
     glColorPointer(4, GL_FLOAT, GPU_BLIT_BUFFER_STRIDE, blit_buffer + GPU_BLIT_BUFFER_COLOR_OFFSET);
 
-    glDrawElements(cdata->last_shape, num_indices, GL_UNSIGNED_SHORT, index_buffer);
+    glDrawElements(cdata->last_shape, num_indices, GL_UNSIGNED_INT, index_buffer);
 
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -5576,7 +5575,7 @@ static void DoPartialFlush(GPU_Renderer* renderer, GPU_Target* dest, GPU_Context
 #endif
 #ifdef SDL_GPU_USE_FIXED_FUNCTION_PIPELINE
     {
-        unsigned short i;
+        unsigned int i;
         unsigned int index;
         float* vertex_pointer = blit_buffer + GPU_BLIT_BUFFER_VERTEX_OFFSET;
         float* texcoord_pointer = blit_buffer + GPU_BLIT_BUFFER_TEX_COORD_OFFSET;
@@ -5613,7 +5612,7 @@ static void DoPartialFlush(GPU_Renderer* renderer, GPU_Target* dest, GPU_Context
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cdata->blit_IBO);
 
             // Copy the whole blit buffer to the GPU
-            submit_buffer_data(GPU_BLIT_BUFFER_STRIDE * num_vertices, blit_buffer, sizeof(unsigned short)*num_indices, index_buffer);  // Fills GPU buffer with data.
+            submit_buffer_data(GPU_BLIT_BUFFER_STRIDE * num_vertices, blit_buffer, sizeof(unsigned int)*num_indices, index_buffer);  // Fills GPU buffer with data.
 
             // Specify the formatting of the blit buffer
             if(context->current_shader_block.position_loc >= 0)
@@ -5634,7 +5633,7 @@ static void DoPartialFlush(GPU_Renderer* renderer, GPU_Target* dest, GPU_Context
 
             upload_attribute_data(cdata, num_vertices);
 
-            glDrawElements(cdata->last_shape, num_indices, GL_UNSIGNED_SHORT, (void*)0);
+            glDrawElements(cdata->last_shape, num_indices, GL_UNSIGNED_INT, (void*)0);
 
             // Disable the vertex arrays again
             if(context->current_shader_block.position_loc >= 0)
@@ -5653,7 +5652,7 @@ static void DoPartialFlush(GPU_Renderer* renderer, GPU_Target* dest, GPU_Context
 #endif
 }
 
-static void DoUntexturedFlush(GPU_Renderer* renderer, GPU_Target* dest, GPU_Context* context, unsigned short num_vertices, float* blit_buffer, unsigned int num_indices, unsigned short* index_buffer)
+static void DoUntexturedFlush(GPU_Renderer* renderer, GPU_Target* dest, GPU_Context* context, unsigned int num_vertices, float* blit_buffer, unsigned int num_indices, unsigned int* index_buffer)
 {
     GPU_CONTEXT_DATA* cdata = (GPU_CONTEXT_DATA*)context->data;
 	(void)renderer;
@@ -5665,7 +5664,7 @@ static void DoUntexturedFlush(GPU_Renderer* renderer, GPU_Target* dest, GPU_Cont
     glVertexPointer(2, GL_FLOAT, GPU_BLIT_BUFFER_STRIDE, blit_buffer + GPU_BLIT_BUFFER_VERTEX_OFFSET);
     glColorPointer(4, GL_FLOAT, GPU_BLIT_BUFFER_STRIDE, blit_buffer + GPU_BLIT_BUFFER_COLOR_OFFSET);
 
-    glDrawElements(cdata->last_shape, num_indices, GL_UNSIGNED_SHORT, index_buffer);
+    glDrawElements(cdata->last_shape, num_indices, GL_UNSIGNED_INT, index_buffer);
 
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -5677,7 +5676,7 @@ static void DoUntexturedFlush(GPU_Renderer* renderer, GPU_Target* dest, GPU_Cont
 #endif
 #ifdef SDL_GPU_USE_FIXED_FUNCTION_PIPELINE
     {
-        unsigned short i;
+        unsigned int i;
         unsigned int index;
         float* vertex_pointer = blit_buffer + GPU_BLIT_BUFFER_VERTEX_OFFSET;
         float* color_pointer = blit_buffer + GPU_BLIT_BUFFER_COLOR_OFFSET;
@@ -5710,7 +5709,7 @@ static void DoUntexturedFlush(GPU_Renderer* renderer, GPU_Target* dest, GPU_Cont
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cdata->blit_IBO);
 
         // Copy the whole blit buffer to the GPU
-        submit_buffer_data(GPU_BLIT_BUFFER_STRIDE * num_vertices, blit_buffer, sizeof(unsigned short)*num_indices, index_buffer);  // Fills GPU buffer with data.
+        submit_buffer_data(GPU_BLIT_BUFFER_STRIDE * num_vertices, blit_buffer, sizeof(unsigned int)*num_indices, index_buffer);  // Fills GPU buffer with data.
 
         // Specify the formatting of the blit buffer
         if(context->current_shader_block.position_loc >= 0)
@@ -5726,7 +5725,7 @@ static void DoUntexturedFlush(GPU_Renderer* renderer, GPU_Target* dest, GPU_Cont
 
         upload_attribute_data(cdata, num_vertices);
 
-        glDrawElements(cdata->last_shape, num_indices, GL_UNSIGNED_SHORT, (void*)0);
+        glDrawElements(cdata->last_shape, num_indices, GL_UNSIGNED_INT, (void*)0);
 
         // Disable the vertex arrays again
         if(context->current_shader_block.position_loc >= 0)
@@ -5760,7 +5759,7 @@ static void FlushBlitBuffer(GPU_Renderer* renderer)
 		int num_vertices;
 		int num_indices;
 		float* blit_buffer;
-		unsigned short* index_buffer;
+		unsigned int* index_buffer;
 
         changeViewport(dest);
         changeCamera(dest);
@@ -5788,9 +5787,9 @@ static void FlushBlitBuffer(GPU_Renderer* renderer)
                 num_vertices = MAX(cdata->blit_buffer_num_vertices, get_lowest_attribute_num_values(cdata, cdata->blit_buffer_num_vertices));
                 num_indices = num_vertices * 3 / 2;  // 6 indices per sprite / 4 vertices per sprite = 3/2
 
-                DoPartialFlush(renderer, dest, context, (unsigned short)num_vertices, blit_buffer, (unsigned int)num_indices, index_buffer);
+                DoPartialFlush(renderer, dest, context, (unsigned int)num_vertices, blit_buffer, (unsigned int)num_indices, index_buffer);
 
-                cdata->blit_buffer_num_vertices -= (unsigned short)num_vertices;
+                cdata->blit_buffer_num_vertices -= (unsigned int)num_vertices;
                 // Move our pointers ahead
                 blit_buffer += GPU_BLIT_BUFFER_FLOATS_PER_VERTEX*num_vertices;
                 index_buffer += num_indices;

@@ -122,7 +122,7 @@ typedef struct GPU_RendererImpl
 	void (SDLCALL *BlitTransformX)(GPU_Renderer* renderer, GPU_Image* image, GPU_Rect* src_rect, GPU_Target* target, float x, float y, float pivot_x, float pivot_y, float degrees, float scaleX, float scaleY);
 	
 	/*! \see GPU_PrimitiveBatchV() */
-	void (SDLCALL *PrimitiveBatchV)(GPU_Renderer* renderer, GPU_Image* image, GPU_Target* target, GPU_PrimitiveEnum primitive_type, unsigned short num_vertices, void* values, unsigned int num_indices, unsigned short* indices, GPU_BatchFlagEnum flags);
+	void (SDLCALL *PrimitiveBatchV)(GPU_Renderer* renderer, GPU_Image* image, GPU_Target* target, GPU_PrimitiveEnum primitive_type, unsigned int num_vertices, void* values, unsigned int num_indices, unsigned int* indices, GPU_BatchFlagEnum flags);
 	
 	/*! \see GPU_GenerateMipmaps() */
 	void (SDLCALL *GenerateMipmaps)(GPU_Renderer* renderer, GPU_Image* image);
