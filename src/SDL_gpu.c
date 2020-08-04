@@ -1547,22 +1547,22 @@ void GPU_BlitRectX(GPU_Image* image, GPU_Rect* src_rect, GPU_Target* target, GPU
     GPU_BlitTransformX(image, src_rect, target, dx + pivot_x * scale_x, dy + pivot_y * scale_y, pivot_x, pivot_y, degrees, scale_x, scale_y);
 }
 
-void GPU_TriangleBatch(GPU_Image* image, GPU_Target* target, unsigned short num_vertices, float* values, unsigned int num_indices, unsigned short* indices, GPU_BatchFlagEnum flags)
+void GPU_TriangleBatch(GPU_Image* image, GPU_Target* target, unsigned int num_vertices, float* values, unsigned int num_indices, unsigned int* indices, GPU_BatchFlagEnum flags)
 {
     GPU_PrimitiveBatchV(image, target, GPU_TRIANGLES, num_vertices, (void*)values, num_indices, indices, flags);
 }
 
-void GPU_TriangleBatchX(GPU_Image* image, GPU_Target* target, unsigned short num_vertices, void* values, unsigned int num_indices, unsigned short* indices, GPU_BatchFlagEnum flags)
+void GPU_TriangleBatchX(GPU_Image* image, GPU_Target* target, unsigned int num_vertices, void* values, unsigned int num_indices, unsigned int* indices, GPU_BatchFlagEnum flags)
 {
     GPU_PrimitiveBatchV(image, target, GPU_TRIANGLES, num_vertices, values, num_indices, indices, flags);
 }
 
-void GPU_PrimitiveBatch(GPU_Image* image, GPU_Target* target, GPU_PrimitiveEnum primitive_type, unsigned short num_vertices, float* values, unsigned int num_indices, unsigned short* indices, GPU_BatchFlagEnum flags)
+void GPU_PrimitiveBatch(GPU_Image* image, GPU_Target* target, GPU_PrimitiveEnum primitive_type, unsigned int num_vertices, float* values, unsigned int num_indices, unsigned int* indices, GPU_BatchFlagEnum flags)
 {
     GPU_PrimitiveBatchV(image, target, primitive_type, num_vertices, (void*)values, num_indices, indices, flags);
 }
 
-void GPU_PrimitiveBatchV(GPU_Image* image, GPU_Target* target, GPU_PrimitiveEnum primitive_type, unsigned short num_vertices, void* values, unsigned int num_indices, unsigned short* indices, GPU_BatchFlagEnum flags)
+void GPU_PrimitiveBatchV(GPU_Image* image, GPU_Target* target, GPU_PrimitiveEnum primitive_type, unsigned int num_vertices, void* values, unsigned int num_indices, unsigned int* indices, GPU_BatchFlagEnum flags)
 {
     if(!CHECK_RENDERER)
         RETURN_ERROR(GPU_ERROR_USER_ERROR, "NULL renderer");

@@ -14,11 +14,11 @@ See a particular renderer's *.c file for specifics. */
 #define BEGIN_UNTEXTURED(function_name, shape, num_additional_vertices, num_additional_indices) \
 	GPU_CONTEXT_DATA* cdata; \
 	float* blit_buffer; \
-	unsigned short* index_buffer; \
+	unsigned int* index_buffer; \
 	int vert_index; \
 	int color_index; \
 	float r, g, b, a; \
-	unsigned short blit_buffer_starting_index; \
+	unsigned int blit_buffer_starting_index; \
     if(target == NULL) \
     { \
         GPU_PushErrorCode(function_name, GPU_ERROR_NULL_ARGUMENT, "target"); \
